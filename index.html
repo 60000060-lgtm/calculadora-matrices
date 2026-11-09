@@ -3,96 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plataforma Matricial - Matemática Superior</title>
-    
-    <!-- Librería KaTeX para renderizado matemático profesional -->
+    <title>Analizador Matricial Profesional - Matemática Superior</title>
+    <!-- Librería de respaldo para renderizado matemático -->
     <link rel="stylesheet" href="https://jsdelivr.net">
     <script defer src="https://jsdelivr.net"></script>
-
-    <!-- ENLACE OBLIGATORIO A TU ARCHIVO DE ESTILOS SEPARADO -->
-    <link rel="stylesheet" href="estilo.css">
+    <style>
+        :root { --primary: #4a148c; --primary-light: #7c43bd; --dark: #111111; --gray-dark: #212121; --light: #f5f5f7; --white: #ffffff; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--light); color: var(--dark); padding-bottom: 40px; }
+        nav { background: var(--dark); padding: 10px; display: flex; justify-content: center; gap: 8px; position: sticky; top: 0; z-index: 100; }
+        nav button { background: transparent; color: #aaa; border: none; padding: 10px 15px; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 6px; }
+        nav button.active, nav button:hover { background: var(--primary); color: var(--white); }
+        .container { width: 100%; max-width: 850px; background: var(--white); padding: 25px; border-radius: 12px; margin: 20px auto; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        header { text-align: center; border-bottom: 2px solid var(--light); padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--primary); font-size: 1.8rem; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .control-panel { background: var(--gray-dark); color: var(--white); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .control-row { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between; width: 100%; }
+        .control-group { display: flex; gap: 10px; align-items: center; }
+        select, input[type="file"], textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; background: white; color: var(--dark); }
+        textarea { width: 100%; resize: vertical; min-height: 70px; font-family: inherit; }
+        button.main-btn { background: var(--primary); color: var(--white); border: none; padding: 12px 24px; font-size: 15px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; max-width: 280px; margin: 15px auto 0 auto; display: block; box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2); }
+        button.main-btn:hover { background: var(--primary-light); }
+        button.secondary { background: transparent; border: 1px solid var(--white); color: var(--white); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        .workspace { display: flex; justify-content: center; margin: 20px 0; }
+        .matrix-grid { display: inline-flex; flex-direction: column; gap: 6px; background: var(--gray-dark); padding: 12px; border-radius: 8px; }
+        .matrix-row { display: flex; gap: 6px; }
+        .matrix-cell { width: 50px; height: 40px; text-align: center; font-size: 16px; border: none; border-radius: 4px; background: var(--white); font-weight: 500; }
+        .camera-box { width: 100%; max-width: 400px; border: 2px dashed var(--primary); border-radius: 12px; padding: 15px; text-align: center; margin: 0 auto; }
+        video, img { width: 100%; max-height: 200px; border-radius: 6px; display: none; margin-top: 10px; }
+        .step-box { margin-top: 20px; padding: 20px; background: var(--light); border-left: 5px solid var(--primary); border-radius: 6px; }
+        .step-box h2 { color: var(--primary); font-size: 1.2rem; margin-bottom: 10px; }
+        .math-render { margin: 10px 0; padding: 12px; background: white; border-radius: 6px; font-size: 1.1rem; text-align: left; line-height: 1.5; }
+    </style>
 </head>
 <body>
 
-    <!-- Menú de ventanas superior -->
-    <nav id="navbar-secciones">
-        <button id="btn-inicio" class="active" onclick="cambiarVentana('inicio')">📖 Inicio</button>
-        <button id="btn-calculadora" onclick="cambiarVentana('calculadora')">🧮 Calculadora</button>
-        <button id="btn-camara" onclick="cambiarVentana('camara')">📷 Escáner</button>
+    <!-- Menú Dinámico: Solo dos herramientas funcionales -->
+    <nav>
+        <button id="btn-calculadora" class="active" onclick="cambiarVentana('calculadora')">🧮 Calculadora Analítica</button>
+        <button id="btn-camara" onclick="cambiarVentana('camara')">📷 Escáner e Imagen</button>
     </nav>
 
     <div class="container">
         <header>
             <h1>Software Analizador de Matrices</h1>
-            <p class="subtitle">Sistema Modular Académico • Curso: Matemática Superior</p>
+            <p style="color:#666; font-size:0.9rem; margin-top:3px;">Proyecto de Investigación • Curso: Matemática Superior</p>
         </header>
 
-        <!-- VENTANA 1: INICIO Y TEORÍA -->
-        <div id="ventana-inicio" class="tab-content">
-            <div class="step-box">
-                <h2>Conceptos Avanzados de Álgebra Lineal</h2>
-                <p>Las matrices son ordenamientos bidimensionales de coeficientes numéricos. El algoritmo detectará automáticamente sus propiedades en las pestañas superiores.</p>
-                <div class="math-render" id="render-teoria-orden"></div>
-            </div>
-        </div>
-
-        <!-- VENTANA 2: CALCULADORA MANUAL -->
-        <div id="ventana-calculadora" class="tab-content" style="display: none;">
+        <!-- VENTANA 1: CALCULADORA MANUAL -->
+        <div id="ventana-calculadora" class="tab-content active">
             <div class="control-panel">
-                <div class="control-group">
-                    <label>Filas (m):</label>
-                    <select id="rows" onchange="crearMatrizDinamica()">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3" selected>3</option>
-                        <option value="4">4</option>
-                    </select>
-                    
-                    <label>Columnas (n):</label>
-                    <select id="cols" onchange="crearMatrizDinamica()">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3" selected>3</option>
-                        <option value="4">4</option>
-                    </select>
+                <div style="width: 100%;">
+                    <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 5px;">Enunciado del problema o interpretación de texto:</label>
+                    <textarea id="textContext" placeholder="Opcional: Escribe o pega aquí el enunciado del problema. El sistema interpretará las palabras clave junto a tus resultados matemáticos..."></textarea>
                 </div>
-                <button class="secondary" onclick="rellenarAleatorio()">Valores Aleatorios</button>
+                <div class="control-row" style="margin-top: 5px;">
+                    <div class="control-group">
+                        <label>Dimensión:</label>
+                        <select id="rows" onchange="crearMatrizDinamica()"><option value="1">1x1</option><option value="2">2x2</option><option value="3" selected>3x3</option><option value="4">4x4</option></select>
+                    </div>
+                    <div class="control-group">
+                        <label>Operación a Resolver:</label>
+                        <select id="operation">
+                            <option value="traza" selected>Calcular Traza Principal (tr)</option>
+                            <option value="transpuesta">Calcular Matriz Transpuesta (Aᵀ)</option>
+                        </select>
+                    </div>
+                    <button class="secondary" onclick="rellenarAleatorio()">Valores Aleatorios</button>
+                </div>
             </div>
-
-            <div class="workspace">
-                <div id="matrixContainer" class="matrix-grid"></div>
-            </div>
-
+            <div class="workspace"><div id="matrixContainer" class="matrix-grid"></div></div>
             <button class="main-btn" onclick="ejecutarAnalisisMatematico('calculadora')">Ejecutar Análisis Estructural</button>
             <div id="resultadoCalculadora"></div>
         </div>
 
-        <!-- VENTANA 3: ESCÁNER DE FOTOS Y CÁMARA -->
-        <div id="ventana-camara" class="tab-content" style="display: none;">
-            <div class="photo-area">
-                <div class="camera-box">
-                    <h3>Captura de Ejercicio</h3>
-                    <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Sube un archivo de tu galería o usa la cámara web de tu dispositivo:</p>
-                    
-                    <input type="file" id="imageInput" accept="image/*" onchange="previsualizarImagen()" style="width: 100%; margin-bottom: 10px;">
-                    <button class="main-btn" style="background:#27ae60; margin:5px 0;" onclick="encenderCamara()">📷 Activar Cámara Web</button>
-                    <button class="main-btn" id="captureBtn" style="background:#e67e22; margin:5px 0; display:none;" onclick="tomarFoto()">📸 Capturar Fotografía</button>
-                    
-                    <video id="video" autoplay playsinline style="width: 100%; display: none; border-radius: 8px; margin-top: 15px;"></video>
-                    <canvas id="canvas" style="display:none;"></canvas>
-                    <img id="preview" alt="Vista previa de la matriz">
-                </div>
-                
-                <div style="width: 100%; text-align: center;">
-                    <p style="color: #555; margin-bottom: 10px;"><i>Nota: La imagen cargada simulará el escaneo de la matriz ingresada en la calculadora manual.</i></p>
-                    <button class="main-btn" onclick="ejecutarAnalisisMatematico('camara')">Procesar Imagen con IA</button>
+        <!-- VENTANA 2: ESCÁNER DE FOTOS Y CÁMARA -->
+        <div id="ventana-camara" class="tab-content">
+            <div class="control-panel" style="background: var(--primary); text-align: center; color: white;">
+                <p style="font-size:0.95rem; font-weight: 500;">Sube una foto del ejercicio con su texto explicativo. El selector de abajo simulará la operación que la IA interpretará de la imagen.</p>
+                <div class="control-group" style="margin: 10px auto 0 auto;">
+                    <label style="color: white;">Operación a Detectar:</label>
+                    <select id="operation-cam" style="border: none;"><option value="traza">Calcular Traza Principal (tr)</option><option value="transpuesta">Calcular Matriz Transpuesta (Aᵀ)</option></select>
                 </div>
             </div>
+            <div class="camera-box">
+                <input type="file" id="imageInput" accept="image/*" onchange="previsualizarImagen()" style="width:100%; margin-bottom:10px;">
+                <button class="main-btn" style="background:#27ae60; margin-bottom:10px;" onclick="encenderCamara()">📷 Activar Cámara Web</button>
+                <button class="main-btn" id="captureBtn" style="background:#e67e22; display:none;" onclick="tomarFoto()">📸 Capturar Fotografía</button>
+                <video id="video" autoplay playsinline style="width:100%; display:none; border-radius:6px;"></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+                <img id="preview" alt="Vista previa">
+            </div>
+            <button class="main-btn" onclick="ejecutarAnalisisMatematico('camara')">Procesar Ejercicio e Imagen</button>
             <div id="resultadoCamara"></div>
         </div>
     </div>
 
-    <!-- ENLACE OBLIGATORIO A TU ARCHIVO DE LÓGICA SEPARADO -->
-    <script src="script.js"></script>
-</body>
-</html>
+    <script>
+        function cambiarVentana(id) {
+            document.getElementById('ventana-calculadora').style.display = 'none';
+            document.getElementById('ventana-camara').style.display = 'none';
+            document.getElementById('btn-calculadora').classList.remove('active');
+            document.getElementById('btn-camara').classList.remove('active');
+            document.getElementById('ventana-' + id).style.display = 'block';
+            document.getElementById('btn-' + id).classList.add('active');
+            apagarCamara();
+        }
+        function crearMatrizDinamica() {
+            const dim = parseInt(document.getElementById('rows').value);
+            const container = document.getElementById('matrixContainer'); container.innerHTML = '';
+            for (let i = 0; i < dim; i++) {
+                const rowDiv = document.createElement('div'); rowDiv.className = 'matrix-row';
+                for (let j = 0; j < dim; j++) {
+                    const input = document.createElement('input'); input.type = 'number'; input.className = 'matrix-cell';
+                    input.id = 'cell-' + i + '-' + j; input.value = 0; rowDiv.appendChild(input);
+                }
+                container.appendChild(rowDiv);
+            }
+        }
+        function rellenarAleatorio() {
+            const dim = parseInt(document.getElementById('rows').value);
+            for (let i = 0; i < dim; i++) for (let j = 0; j < dim; j++) document.getElementById('cell-' + i + '-' + j).value = Math.floor(Math.random() * 11) - 5;
+        }
+        let streamCamara = null;
+        function encenderCamara() {
+            const video = document.getElementById('video'), captureBtn = document.getElementById('captureBtn');
+            document.getElementById('preview').style.display = 'none';
