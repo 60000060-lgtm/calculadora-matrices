@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma Matricial - Matemática Superior</title>
     
-    <!-- Librería KaTeX para renderizado matemático profesional -->
+    <!-- Librería KaTeX CORREGIDA para renderizado matemático profesional (LaTeX) -->
     <link rel="stylesheet" href="https://jsdelivr.net">
     <script defer src="https://jsdelivr.net"></script>
 
@@ -149,11 +149,11 @@
             <div class="step-box">
                 <h2>Conceptos Avanzados de Álgebra Lineal</h2>
                 <p>Las matrices son ordenamientos bidimensionales de coeficientes numéricos. En este módulo puedes repasar las clasificaciones que el algoritmo detectará de forma automática en las siguientes ventanas:</p>
-                <div class="math-render">\text{Orden de una Matriz: } m \times n \quad \text{(Filas } \times \text{ Columnas)}</div>
+                <div class="math-render" id="render-teoria-orden"></div>
                 <p style="margin-top: 10px;"><b>Tipologías Analizadas:</b></p>
                 <ul style="margin-left: 20px; margin-top: 5px; line-height: 1.6;">
-                    <li><b>Matriz Cuadrada:</b> Cuando el orden geométrico cumple la igualdad \(m = cols\).</li>
-                    <li><b>Matriz Identidad (\(I\)):</b> Matriz cuadrada donde todos los componentes escalares \(a_{ii} = 1\) y los demás componentes son nulos.</li>
+                    <li><b>Matriz Cuadrada:</b> Cuando el orden geométrico cumple la igualdad de filas y columnas ($m = n$).</li>
+                    <li><b>Matriz Identidad (\(I\)):</b> Matriz cuadrada donde todos los componentes escalares de su diagonal son 1 y los demás componentes son nulos.</li>
                     <li><b>Matriz Simétrica:</b> Estructura idéntica bajo la aplicación de su operador transpuesto \((A = A^T)\).</li>
                 </ul>
             </div>
@@ -181,8 +181,7 @@
                 </div>
                 <button class="secondary" onclick="rellenarAleatorio()">Valores Aleatorios</button>
             </div>
-
-            <div class="workspace">
+                        <div class="workspace">
                 <div id="matrixContainer" class="matrix-grid"></div>
             </div>
 
@@ -201,10 +200,196 @@
                     <button class="main-btn" style="background:#27ae60; margin:5px 0;" onclick="encenderCamara()">📷 Activar Cámara Web</button>
                     <button class="main-btn" id="captureBtn" style="background:#e67e22; margin:5px 0; display:none;" onclick="tomarFoto()">📸 Capturar Fotografía</button>
                     
-                    <video id="video" autoplay playsinline></video>
+                    <video id="video" autoplay playsinline style="width: 100%; display: none; border-radius: 8px; margin-top: 15px;"></video>
                     <canvas id="canvas" style="display:none;"></canvas>
                     <img id="preview" alt="Vista previa de la matriz">
                 </div>
                 
+                <div style="width: 100%; text-align: center;">
+                    <p style="color: #555; margin-bottom: 10px;"><i>Nota: La imagen cargada simulará el escaneo de la matriz ingresada en la calculadora manual.</i></p>
+                    <button class="main-btn" onclick="ejecutarAnalisisMatematico('camara')">Procesar Imagen con IA</button>
+                </div>
+            </div>
+            <div id="resultadoCamara"></div>
+        </div>
+    </div>
 
-                
+    <script>
+        function cambiarVentana(idVentana) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+            
+            if(idVentana === 'inicio') document.getElementById('ventana-inicio').classList.add('active');
+            if(idVentana === 'calculadora') document.getElementById('ventana-calculadora').classList.add('active');
+            if(idVentana === 'camara') document.getElementById('ventana-camara').classList.add('active');
+            
+            event.currentTarget.classList.add('active');
+            apagarCamara();
+        }
+
+        function crearMatrizDinamica() {
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+            const container = document.getElementById('matrixContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < rows; i++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'matrix-row';
+                for (let j = 0; j < cols; j++) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'matrix-cell';
+                    input.id = `cell-${i}-${j}`;
+                    input.value = 0;
+                    rowDiv.appendChild(input);
+                }
+                container.appendChild(rowDiv);
+            }
+        }
+
+        function rellenarAleatorio() {
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    document.getElementById(`cell-${i}-${j}`).value = Math.floor(Math.random() * 11) - 5;
+                }
+            }
+        }
+
+        let streamCamara = null;
+        function encenderCamara() {
+            const video = document.getElementById('video');
+            const captureBtn = document.getElementById('captureBtn');
+            document.getElementById('preview').style.display = 'none';
+            
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+                .then(stream => {
+                    streamCamara = stream;
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    captureBtn.style.display = 'block';
+                })
+                .catch(err => alert("No se pudo acceder a la cámara: " + err));
+        }
+
+        function tomarFoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const preview = document.getElementById('preview');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            preview.src = canvas.toDataURL('image/png');
+            preview.style.display = 'block';
+            apagarCamara();
+        }
+
+        function apagarCamara() {
+            if(streamCamara) {
+                streamCamara.getTracks().forEach(track => track.stop());
+                streamCamara = null;
+            }
+            document.getElementById('video').style.display = 'none';
+            document.getElementById('captureBtn').style.display = 'none';
+        }
+
+        function previsualizarImagen() {
+            const file = document.getElementById('imageInput').files;
+            const preview = document.getElementById('preview');
+            if (file) {
+                apagarCamara();
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function ejecutarAnalisisMatematico(origen) {
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+            let contenedor = origen === 'calculadora' ? document.getElementById('resultadoCalculadora') : document.getElementById('resultadoCamara');
+            contenedor.innerHTML = "";
+
+            let A = [];
+            for (let i = 0; i < rows; i++) {
+                A[i] = [];
+                for (let j = 0; j < cols; j++) {
+                    A[i][j] = parseFloat(document.getElementById(`cell-${i}-${j}`).value) || 0;
+                }
+            }
+
+            let insignias = [];
+            if (rows === cols) {
+                if (rows === 1) insignias.push("Matriz Escalar (1x1)");
+                else {
+                    insignias.push("Matriz Cuadrada");
+                    let esId = true, esNula = true, esSim = true;
+                    for(let i=0; i<rows; i++) {
+                        for(let j=0; j<cols; j++) {
+                            if(A[i][j] !== 0) esNula = false;
+                            if(i === j) { if(A[i][j] !== 1) esId = false; }
+                            else { if(A[i][j] !== 0) esId = false; }
+                            if(A[i][j] !== A[j][i]) esSim = false;
+                        }
+                    }
+                    if(esNula) insignias.push("Matriz Nula");
+                    if(esId) insignias.push("Matriz Identidad (I)");
+                    if(esSim && !esNula) insignias.push("Matriz Simétrica");
+                }
+            } else {
+                insignias.push("Matriz Rectangular");
+            }
+
+            let badgesHtml = insignias.map(t => `<span class="type-badge">${t}</span>`).join('');
+            let latexOriginal = generarLatexMatriz(A, rows, cols);
+
+            let AT = [];
+            for(let j=0; j<cols; j++) {
+                AT[j] = [];
+                for(let i=0; i<rows; i++) { AT[j][i] = A[i][j]; }
+            }
+            let latexTranspuesta = generarLatexMatriz(AT, cols, rows);
+
+            let htmlTraza = "";
+            let idTraza = `traza-${origen}`;
+            if(rows === cols) {
+                let suma = 0;
+                let elementos = [];
+                for(let i=0; i<rows; i++) { suma += A[i][i]; elementos.push(A[i][i]); }
+                htmlTraza = `
+                    <div class="step-box">
+                        <h2>2. Operador Traza Formal: \(\\text{tr}(A)\)</h2>
+                        <p>Suma formal de componentes de la diagonal principal:</p>
+                        <div class="math-render" id="${idTraza}"></div>
+                    </div>`;
+                setTimeout(() => {
+                    katex.render(`\\text{tr}(A) = ${elementos.join(' + ').replace(/\+ -/g, '- ')} = ${suma}`, document.getElementById(idTraza));
+                }, 50);
+            }
+
+            contenedor.innerHTML = `
+                <div class="step-box">
+                    <h2>1. Resultados de la Topología Lineal</h2>
+                    <div style="margin-bottom:15px;">${badgesHtml}</div>
+                    <div class="math-render" id="orig-${origen}"></div>
+                    <p style="margin-top:10px;">Aplicación del operador transpuesto espacial \((A^T)\):</p>
+                    <div class="math-render" id="trans-${origen}"></div>
+                </div>
+                ${htmlTraza}
+            `;
+
+            setTimeout(() => {
+                katex.render(`A = ${latexOriginal}`, document.getElementById(`orig-${origen}`));
+                katex.render(`A^T = ${latexTranspuesta}`, document.getElementById(`trans-${origen}`));
+            }, 50);
+        }
+
+        function generarLatexMatriz(matriz, r, c) {
+
