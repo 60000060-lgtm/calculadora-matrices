@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Matrices Avanzada - Matemática Superior</title>
+    <title>Plataforma Matricial - Matemática Superior</title>
     
-    <!-- Librería KaTeX para renderizado matemático profesional (LaTeX) -->
+    <!-- Librería KaTeX para renderizado matemático profesional -->
     <link rel="stylesheet" href="https://jsdelivr.net">
     <script defer src="https://jsdelivr.net"></script>
 
@@ -17,18 +17,47 @@
             --gray-dark: #212121;
             --light: #f5f5f7; /* Blanco Tecnológico */
             --white: #ffffff;
-            --accent: #d32f2f;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--light); 
             color: var(--dark);
-            padding: 15px;
+            padding-bottom: 40px;
+        }
+
+        /* Barra de navegación superior por pestañas */
+        nav {
+            background: var(--dark);
+            padding: 10px 20px;
             display: flex;
             justify-content: center;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        nav button {
+            background: transparent;
+            color: #aaa;
+            border: none;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.3s;
+            box-shadow: none !important;
+            width: auto !important;
+        }
+
+        nav button.active, nav button:hover {
+            background: var(--primary);
+            color: var(--white);
         }
 
         .container { 
@@ -38,6 +67,7 @@
             padding: 30px; 
             border-radius: 16px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            margin: 30px auto;
         }
 
         header {
@@ -47,20 +77,14 @@
             margin-bottom: 30px;
         }
 
-        h1 { 
-            color: var(--primary); 
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-        
-        .subtitle { 
-            color: #666; 
-            font-size: 0.95rem; 
-            margin-top: 5px;
-        }
+        h1 { color: var(--primary); font-size: 2.2rem; font-weight: 700; }
+        .subtitle { color: #666; font-size: 0.95rem; margin-top: 5px; }
 
-        /* Panel de Control */
+        /* Control de ventanas */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Controles de la calculadora */
         .control-panel { 
             background: var(--gray-dark); 
             color: var(--white);
@@ -73,226 +97,114 @@
             align-items: center; 
         }
 
-        .control-group { 
-            display: flex; 
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center; 
-            gap: 15px; 
-        }
+        .control-group { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 15px; }
+        select, input[type="file"] { padding: 10px 16px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; background: var(--white); color: var(--dark); }
 
-        label { font-weight: 500; font-size: 0.95rem; }
-        
-        select, input[type="file"] { 
-            padding: 10px 16px; 
-            border-radius: 8px; 
-            border: 1px solid #ccc; 
-            font-size: 14px; 
-            background: var(--white); 
-            color: var(--dark);
-            outline: none;
+        button.main-btn { 
+            background: var(--primary); color: var(--white); border: none; padding: 12px 24px; font-size: 15px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-weight: 600; width: 100%; max-width: 250px;
+            box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2); margin: 15px auto; display: block;
         }
+        button.main-btn:hover { background: var(--primary-light); transform: translateY(-1px); }
+        button.secondary { background: transparent; border: 2px solid var(--white); color: var(--white); padding: 10px 16px; border-radius: 8px; cursor: pointer; }
 
-        /* Botones de acción */
-        button { 
-            background: var(--primary); 
-            color: var(--white); 
-            border: none; 
-            padding: 12px 24px; 
-            font-size: 15px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            transition: all 0.2s ease; 
-            font-weight: 600;
-            width: 100%;
-            max-width: 220px;
-            box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
-        }
-        button:hover { background: var(--primary-light); transform: translateY(-1px); }
-        button.secondary { background: transparent; border: 2px solid var(--white); color: var(--white); box-shadow: none; }
-        button.secondary:hover { background: rgba(255,255,255,0.1); }
-        
-        /* Área de trabajo responsiva */
-        .workspace { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 30px; 
-            align-items: center; 
-            margin-bottom: 35px;
-        }
-
-        .matrix-box { text-align: center; width: 100%; }
-        .matrix-box h3 { margin-bottom: 15px; color: var(--gray-dark); font-size: 1.1rem; }
-        
-        /* Renderizado de rejilla física para inputs */
-        .matrix-grid { 
-            display: inline-flex; 
-            flex-direction: column; 
-            gap: 8px; 
-            background: var(--gray-dark); 
-            padding: 16px; 
-            border-radius: 10px; 
-        }
-        
+        /* Cuadrícula de la Matriz */
+        .workspace { display: flex; justify-content: center; margin: 25px 0; }
+        .matrix-grid { display: inline-flex; flex-direction: column; gap: 8px; background: var(--gray-dark); padding: 16px; border-radius: 10px; }
         .matrix-row { display: flex; gap: 8px; }
-        
-        .matrix-cell { 
-            width: 55px; 
-            height: 45px; 
-            text-align: center; 
-            font-size: 16px; 
-            border: none; 
-            border-radius: 6px; 
-            outline: none; 
-            background: var(--white);
-            color: var(--dark);
-            font-weight: 500;
-        }
+        .matrix-cell { width: 55px; height: 45px; text-align: center; font-size: 16px; border: none; border-radius: 6px; background: var(--white); color: var(--dark); font-weight: 500; }
 
-        /* Bloque de archivos */
-        .photo-box { 
-            width: 100%; 
-            max-width: 340px;
-            border: 2px dashed var(--primary); 
-            border-radius: 12px; 
-            padding: 20px; 
-            text-align: center; 
-            background: #fff; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-        }
-        
-        #preview { 
-            max-width: 100%; 
-            max-height: 150px; 
-            margin-top: 15px; 
-            border-radius: 6px; 
-            display: none; 
-            object-fit: contain; 
-        }
-        
-        /* Resultados Científicos */
-        .step-box { 
-            margin-top: 25px; 
-            padding: 25px; 
-            background: var(--light); 
-            border-left: 6px solid var(--primary); 
-            border-radius: 8px; 
-        }
+        /* Sección de Fotos e Integración de Cámara */
+        .photo-area { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .camera-box { width: 100%; max-width: 400px; border: 2px dashed var(--primary); border-radius: 12px; padding: 20px; text-align: center; background: #fff; }
+        video, img { width: 100%; max-height: 250px; border-radius: 8px; display: none; margin-top: 15px; object-fit: contain; }
 
+        /* Bloques de Resultados Académicos */
+        .step-box { margin-top: 25px; padding: 25px; background: var(--light); border-left: 6px solid var(--primary); border-radius: 8px; }
         .step-box h2 { color: var(--primary); font-size: 1.3rem; margin-bottom: 15px; }
-        .math-render { margin: 15px 0; padding: 15px; background: white; border-radius: 8px; overflow-x: auto; }
-        .type-badge { display: inline-block; background: var(--dark); color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; margin-right: 5px; margin-bottom: 5px; }
+        .math-render { margin: 15px 0; padding: 15px; background: white; border-radius: 8px; overflow-x: auto; font-size: 1.1rem; }
+        .type-badge { display: inline-block; background: var(--dark); color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; margin-right: 5px; }
 
-        /* Media Queries (PC / Tablets) */
         @media (min-width: 700px) {
-            body { padding: 5px 20px; }
-            h1 { font-size: 2.4rem; }
             .control-panel { flex-direction: row; justify-content: space-between; }
-            .workspace { flex-direction: row; justify-content: space-around; align-items: flex-start; }
-            .matrix-box { width: auto; }
-            button { width: auto; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>Software Analizador de Matrices</h1>
-        <p class="subtitle">Proyecto de Investigación Académica • Curso: Matemática Superior</p>
-    </header>
-    
-    <div class="control-panel">
-        <div class="control-group">
-            <label>Filas (m):</label>
-            <select id="rows" onchange="crearMatrizDinamica()">
-                <option value="2">2</option>
-                <option value="3" selected>3</option>
-                <option value="4">4</option>
-            </select>
-            
-            <label>Columnas (n):</label>
-            <select id="cols" onchange="crearMatrizDinamica()">
-                <option value="2">2</option>
-                <option value="3" selected>3</option>
-                <option value="4">4</option>
-            </select>
-        </div>
-        <button class="secondary" onclick="rellenarAleatorio()">Valores Aleatorios</button>
-    </div>
+    <!-- Menú de ventanas superior -->
+    <nav>
+        <button class="active" onclick="cambiarVentana('inicio')">📖 Teoría e Inicio</button>
+        <button onclick="cambiarVentana('calculadora')">🧮 Calculadora Manual</button>
+        <button onclick="cambiarVentana('camara')">📷 Escáner de Fotos</button>
+    </nav>
 
-    <div class="workspace">
-        <div class="matrix-box">
-            <h3>Matriz de Entrada \(A\)</h3>
-            <div id="matrixContainer" class="matrix-grid"></div>
+    <div class="container">
+        <header>
+            <h1>Software Analizador de Matrices</h1>
+            <p class="subtitle">Sistema Modular Académico • Curso: Matemática Superior</p>
+        </header>
+
+        <!-- VENTANA 1: INICIO Y TEORÍA -->
+        <div id="ventana-inicio" class="tab-content active">
+            <div class="step-box">
+                <h2>Conceptos Avanzados de Álgebra Lineal</h2>
+                <p>Las matrices son ordenamientos bidimensionales de coeficientes numéricos. En este módulo puedes repasar las clasificaciones que el algoritmo detectará de forma automática en las siguientes ventanas:</p>
+                <div class="math-render">\text{Orden de una Matriz: } m \times n \quad \text{(Filas } \times \text{ Columnas)}</div>
+                <p style="margin-top: 10px;"><b>Tipologías Analizadas:</b></p>
+                <ul style="margin-left: 20px; margin-top: 5px; line-height: 1.6;">
+                    <li><b>Matriz Cuadrada:</b> Cuando el orden geométrico cumple la igualdad \(m = cols\).</li>
+                    <li><b>Matriz Identidad (\(I\)):</b> Matriz cuadrada donde todos los componentes escalares \(a_{ii} = 1\) y los demás componentes son nulos.</li>
+                    <li><b>Matriz Simétrica:</b> Estructura idéntica bajo la aplicación de su operador transpuesto \((A = A^T)\).</li>
+                </ul>
+            </div>
         </div>
 
-        <div class="photo-box">
-            <span style="font-weight: bold; color: var(--primary); margin-bottom: 10px; font-size: 0.9rem;">📷 Digitalización por Imagen</span>
-            <input type="file" id="imageInput" accept="image/*" onchange="previsualizarImagen()" style="width: 100%;">
-            <img id="preview" alt="Vista previa">
+        <!-- VENTANA 2: CALCULADORA MANUAL -->
+        <div id="ventana-calculadora" class="tab-content">
+            <div class="control-panel">
+                <div class="control-group">
+                    <label>Filas (m):</label>
+                    <select id="rows" onchange="crearMatrizDinamica()">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                    </select>
+                    
+                    <label>Columnas (n):</label>
+                    <select id="cols" onchange="crearMatrizDinamica()">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+                <button class="secondary" onclick="rellenarAleatorio()">Valores Aleatorios</button>
+            </div>
+
+            <div class="workspace">
+                <div id="matrixContainer" class="matrix-grid"></div>
+            </div>
+
+            <button class="main-btn" onclick="ejecutarAnalisisMatematico('calculadora')">Ejecutar Análisis Estructural</button>
+            <div id="resultadoCalculadora"></div>
         </div>
-    </div>
 
-    <div style="text-align: center;">
-        <button style="max-width: 400px; width: 100%; padding: 15px; font-size: 16px;" onclick="ejecutarAnalisisMatematico()">Ejecutar Análisis Estructural</button>
-    </div>
+        <!-- VENTANA 3: ESCÁNER DE FOTOS Y CÁMARA -->
+        <div id="ventana-camara" class="tab-content">
+            <div class="photo-area">
+                <div class="camera-box">
+                    <h3>Captura de Ejercicio</h3>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Sube un archivo de tu galería o usa la cámara web de tu dispositivo:</p>
+                    
+                    <input type="file" id="imageInput" accept="image/*" onchange="previsualizarImagen()" style="width: 100%; margin-bottom: 10px;">
+                    <button class="main-btn" style="background:#27ae60; margin:5px 0;" onclick="encenderCamara()">📷 Activar Cámara Web</button>
+                    <button class="main-btn" id="captureBtn" style="background:#e67e22; margin:5px 0; display:none;" onclick="tomarFoto()">📸 Capturar Fotografía</button>
+                    
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    <img id="preview" alt="Vista previa de la matriz">
+                </div>
+                
 
-    <div id="resultadoSeccion"></div>
-</div>
-
-<script>
-// Generación dinámica de la interfaz de la matriz
-function crearMatrizDinamica() {
-    const rows = parseInt(document.getElementById('rows').value);
-    const cols = parseInt(document.getElementById('cols').value);
-    const container = document.getElementById('matrixContainer');
-    container.innerHTML = '';
-
-    for (let i = 0; i < rows; i++) {
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'matrix-row';
-        for (let j = 0; j < cols; j++) {
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.className = 'matrix-cell';
-            input.id = `cell-${i}-${j}`;
-            input.value = 0;
-            rowDiv.appendChild(input);
-        }
-        container.appendChild(rowDiv);
-    }
-}
-
-function rellenarAleatorio() {
-    const rows = parseInt(document.getElementById('rows').value);
-    const cols = parseInt(document.getElementById('cols').value);
-    for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-            document.getElementById(`cell-${i}-${j}`).value = Math.floor(Math.random() * 11) - 5;
-        }
-    }
-}
-
-function previsualizarImagen() {
-    const file = document.getElementById('imageInput').files;
-    const preview = document.getElementById('preview');
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-    }
-}
-
-// Algoritmos de Análisis Matemático Completo
-function ejecutarAnalisisMatematico() {
-    const rows = parseInt(document.getElementById('rows').value);
-    const cols = parseInt(document.getElementById('cols').value);
-    
-    let A = [];
+                
